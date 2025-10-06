@@ -1,34 +1,34 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="search-page-header">
             {{ __('Search Posts') }}
         </h2>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <form action="{{ route('search.index') }}" method="GET" class="space-y-6">
-                        <div>
-                            <label for="q" class="block text-sm font-medium text-gray-700 mb-2">
+        <div class="search-page-container">
+            <div class="search-card">
+                <div class="search-body">
+                    <form action="{{ route('search.index') }}" method="GET" class="search-form">
+                        <div class="search-field">
+                            <label for="q" class="search-label">
                                 Search Query
                             </label>
                             <input type="text" 
                                    name="q" 
                                    id="q"
                                    value="{{ request('q') }}"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   class="search-input"
                                    placeholder="Search by title or content...">
                         </div>
 
-                        <div>
-                            <label for="tag" class="block text-sm font-medium text-gray-700 mb-2">
+                        <div class="search-field">
+                            <label for="tag" class="search-label">
                                 Filter by Tag
                             </label>
                             <select name="tag" 
                                     id="tag"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    class="search-select">
                                 <option value="">All Tags</option>
                                 @foreach($tags as $tag)
                                     <option value="{{ $tag->id }}" {{ request('tag') == $tag->id ? 'selected' : '' }}>
@@ -38,14 +38,14 @@
                             </select>
                         </div>
 
-                        <div class="flex justify-center gap-4 mt-6">
+                        <div class="search-actions">
                             <button type="submit" 
-                                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-lg shadow-lg transition-all duration-200 hover:shadow-xl">
+                                    class="form-search-button">
                                 🔍 Search Posts
                             </button>
                             <button type="button" 
                                     onclick="clearSearch()"
-                                    class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg text-lg shadow-lg transition-all duration-200 hover:shadow-xl">
+                                    class="form-clear-search-button">
                                 🗑️ Clear
                             </button>
                         </div>

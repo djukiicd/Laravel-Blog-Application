@@ -1,24 +1,24 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="post-show-header">
             {{ $post->title }}
         </h2>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+        <div class="post-show-container">
             @if(session('success'))
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+                <div class="success-message">
                     {{ session('success') }}
                 </div>
             @endif
 
             <!-- Post Content -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                <div class="p-6 text-gray-900">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="text-sm text-gray-500">
-                            By <span class="font-semibold">{{ $post->user->name }}</span> • 
+            <div class="post-content-card">
+                <div class="post-content-body">
+                    <div class="post-meta-header">
+                        <div class="post-meta-info">
+                            By <span class="post-meta-author">{{ $post->user->name }}</span> • 
                             {{ $post->created_at->format('M d, Y \a\t g:i A') }}
                             @if($post->updated_at != $post->created_at)
                                 • Updated {{ $post->updated_at->format('M d, Y \a\t g:i A') }}
@@ -28,33 +28,32 @@
                             @endif
                         </div>
                         
-                        @auth
-                            @if(auth()->id() === $post->user_id)
-                                <div class="flex space-x-2">
-                                    <a href="{{ route('posts.edit', $post) }}" 
-                                       class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-3 rounded text-sm">
-                                        Edit
-                                    </a>
+                        @can('update', $post)
+                            <div class="post-actions-header">
+                                <a href="{{ route('posts.edit', $post) }}" class="btn btn-warm text-xs">
+                                    Edit
+                                </a>
+                                @can('delete', $post)
                                     <form action="{{ route('posts.destroy', $post) }}" method="POST" class="inline">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" 
-                                                class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm"
+                                                class="delete-button"
                                                 onclick="return confirm('Are you sure you want to delete this post?')">
                                             Delete
                                         </button>
                                     </form>
-                                </div>
-                            @endif
-                        @endauth
+                                @endcan
+                            </div>
+                        @endcan
                     </div>
                     
                     @if($post->tags->count() > 0)
-                        <div class="mb-6">
-                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Tags:</h4>
-                            <div class="flex flex-wrap gap-2">
+                        <div class="post-tags-section">
+                            <h4 class="post-tags-title">Tags:</h4>
+                            <div class="post-tags-container">
                                 @foreach($post->tags as $tag)
-                                    <span class="inline-block bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
+                                    <span class="post-tag-large">
                                         {{ $tag->name }}
                                     </span>
                                 @endforeach
@@ -62,16 +61,15 @@
                         </div>
                     @endif
                     
-                    <div class="prose max-w-none">
-                        {!! nl2br(e($post->content)) !!}
+                    <div class="post-content-prose">
+                        {!! $post->content !!}
                     </div>
                     
                     @auth
-                        <div class="mt-6 flex justify-center">
+                        <div class="post-upvote-section">
                             <button onclick="toggleUpvote({{ $post->id }})" 
                                     id="upvote-btn-{{ $post->id }}"
-                                    class="flex items-center space-x-2 px-6 py-3 rounded-full text-lg transition-colors
-                                           {{ $post->isUpvotedBy(auth()->id()) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
+                                    class="{{ $post->isUpvotedBy(auth()->id()) ? 'post-upvote-button-active' : 'post-upvote-button-inactive' }}">
                                 <span>👍</span>
                                 <span id="upvote-count-{{ $post->id }}">{{ $post->upvotes_count }}</span>
                                 <span>Upvote</span>
@@ -82,35 +80,35 @@
             </div>
 
             <!-- Comments Section -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            <div class="comments-card">
+                <div class="comments-body">
+                    <h3 class="comments-title">
                         Comments ({{ $post->comments->count() }})
                     </h3>
 
                     <!-- Add Comment Form -->
                     @auth
-                        <form action="{{ route('comments.store', $post) }}" method="POST" class="mb-6">
+                        <form action="{{ route('comments.store', $post) }}" method="POST" class="comment-form">
                             @csrf
                             <div class="mb-4">
                                 <textarea name="comment" 
                                           rows="3" 
-                                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('comment') border-red-500 @enderror"
+                                          class="@error('comment') comment-textarea-error @else comment-textarea @enderror"
                                           placeholder="Write a comment..."
                                           required>{{ old('comment') }}</textarea>
                                 @error('comment')
-                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                    <p class="comment-error">{{ $message }}</p>
                                 @enderror
                             </div>
                             <button type="submit" 
-                                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                    class="comment-submit-button">
                                 Add Comment
                             </button>
                         </form>
                     @else
-                        <div class="bg-gray-100 p-4 rounded mb-6 text-center">
-                            <p class="text-gray-600">
-                                <a href="{{ route('login') }}" class="text-blue-600 hover:text-blue-800 font-medium">Login</a> 
+                        <div class="login-prompt">
+                            <p class="login-prompt-text">
+                                <a href="{{ route('login') }}" class="login-prompt-link">Login</a> 
                                 to leave a comment.
                             </p>
                         </div>
@@ -118,37 +116,35 @@
 
                     <!-- Comments List -->
                     @forelse($post->comments as $comment)
-                        <div class="border-l-4 border-blue-500 pl-4 mb-4">
-                            <div class="flex justify-between items-start">
-                                <div class="flex-1">
-                                    <div class="text-sm text-gray-500 mb-1">
-                                        <span class="font-semibold">
+                        <div class="comment-item">
+                            <div class="comment-header">
+                                <div class="comment-content-wrapper">
+                                    <div class="comment-meta">
+                                        <span class="comment-author">
                                             {{ $comment->user ? $comment->user->name : 'Anonymous' }}
                                         </span>
                                         • {{ $comment->created_at->format('M d, Y \a\t g:i A') }}
                                     </div>
-                                    <div class="text-gray-800">
+                                    <div class="comment-text">
                                         {{ $comment->comment }}
                                     </div>
                                 </div>
                                 
-                                @auth
-                                    @if(auth()->id() === $comment->user_id || auth()->id() === $post->user_id)
-                                        <form action="{{ route('comments.destroy', $comment) }}" method="POST" class="ml-4">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" 
-                                                    class="text-red-500 hover:text-red-700 text-sm"
-                                                    onclick="return confirm('Are you sure you want to delete this comment?')">
-                                                Delete
-                                            </button>
-                                        </form>
-                                    @endif
-                                @endauth
+                                @can('delete', $comment)
+                                    <form action="{{ route('comments.destroy', $comment) }}" method="POST" class="comment-actions">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" 
+                                                class="delete-button"
+                                                onclick="return confirm('Are you sure you want to delete this comment?')">
+                                            Delete
+                                        </button>
+                                    </form>
+                                @endcan
                             </div>
                         </div>
                     @empty
-                        <div class="text-center text-gray-500 py-8">
+                        <div class="comments-empty">
                             <p>No comments yet. Be the first to comment!</p>
                         </div>
                     @endforelse
@@ -156,9 +152,9 @@
             </div>
 
             <!-- Back to Posts -->
-            <div class="mt-6">
+            <div class="back-to-posts">
                 <a href="{{ route('posts.index') }}" 
-                   class="text-blue-600 hover:text-blue-800 font-medium">
+                   class="back-to-posts-link">
                     ← Back to all posts
                 </a>
             </div>
@@ -181,9 +177,9 @@
                 const count = document.getElementById(`upvote-count-${postId}`);
                 
                 if (data.isUpvoted) {
-                    btn.className = btn.className.replace('bg-gray-100 text-gray-600 hover:bg-gray-200', 'bg-green-100 text-green-800');
+                    btn.className = btn.className.replace('post-upvote-button-inactive', 'post-upvote-button-active');
                 } else {
-                    btn.className = btn.className.replace('bg-green-100 text-green-800', 'bg-gray-100 text-gray-600 hover:bg-gray-200');
+                    btn.className = btn.className.replace('post-upvote-button-active', 'post-upvote-button-inactive');
                 }
                 
                 count.textContent = data.upvoteCount;

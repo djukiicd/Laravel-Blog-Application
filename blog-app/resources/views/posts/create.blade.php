@@ -1,84 +1,84 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="form-page-header">
             {{ __('Create New Post') }}
         </h2>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
+        <div class="form-page-container">
+            <div class="form-card">
+                <div class="form-body">
                     <form action="{{ route('posts.store') }}" method="POST">
                         @csrf
                         
-                        <div class="mb-6">
-                            <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
+                        <div class="form-field">
+                            <label for="title" class="form-label">
                                 Title *
                             </label>
                             <input type="text" 
                                    name="title" 
                                    id="title"
                                    value="{{ old('title') }}"
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('title') border-red-500 @enderror"
+                                   class="@error('title') form-input-error @else form-input @enderror"
                                    placeholder="Enter post title..."
                                    required>
                             @error('title')
-                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                <p class="form-error">{{ $message }}</p>
                             @enderror
                         </div>
 
-                        <div class="mb-6">
-                            <label for="content" class="block text-sm font-medium text-gray-700 mb-2">
+                        <div class="form-field">
+                            <label for="content" class="form-label">
                                 Content *
                             </label>
-                            <div class="relative">
+                            <div class="form-relative">
                                 <textarea name="content" 
                                           id="content"
                                           rows="15"
-                                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('content') border-red-500 @enderror"
+                                          class="@error('content') form-textarea-error @else form-textarea @enderror"
                                           placeholder="Write your post content here... Type # to see tag suggestions"
                                           required>{{ old('content') }}</textarea>
                                 
                                 <!-- Tag suggestions dropdown -->
-                                <div id="tag-suggestions" class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg hidden max-h-40 overflow-y-auto">
+                                <div id="tag-suggestions" class="tag-suggestions">
                                     <!-- Suggestions will be populated by JavaScript -->
                                 </div>
                             </div>
                             @error('content')
-                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                <p class="form-error">{{ $message }}</p>
                             @enderror
                         </div>
 
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <div class="form-field">
+                            <label class="form-label">
                                 Tags
                             </label>
-                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                            <div class="tag-checkbox-container">
                                 @foreach($tags as $tag)
-                                    <label class="flex items-center space-x-2 p-2 border rounded-md hover:bg-gray-50 cursor-pointer">
+                                    <label class="tag-checkbox-item">
                                         <input type="checkbox" 
                                                name="tags[]" 
                                                value="{{ $tag->id }}"
-                                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                               class="tag-checkbox"
                                                {{ in_array($tag->id, old('tags', [])) ? 'checked' : '' }}>
-                                        <span class="text-sm text-gray-700">{{ $tag->name }}</span>
+                                        <span class="tag-checkbox-label">{{ $tag->name }}</span>
                                     </label>
                                 @endforeach
                             </div>
                             @error('tags')
-                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                <p class="form-error">{{ $message }}</p>
                             @enderror
                         </div>
 
-                        <div class="flex justify-between items-center">
+                        <div class="form-actions">
                             <a href="{{ route('posts.index') }}" 
-                               class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                               class="form-clear-button">
                                 Cancel
                             </a>
                             
                             <button type="submit" 
-                                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                    class="form-submit-button">
                                 Create Post
                             </button>
                         </div>
@@ -163,7 +163,7 @@
                 }
                 
                 tagSuggestions.innerHTML = filteredTags.map(([id, name]) => 
-                    `<div class="tag-suggestion px-3 py-2 hover:bg-gray-100 cursor-pointer" data-tag-id="${id}" data-tag-name="${name}">
+                    `<div class="tag-suggestion-item" data-tag-id="${id}" data-tag-name="${name}">
                         <span class="font-medium">${name}</span>
                     </div>`
                 ).join('');
@@ -171,7 +171,7 @@
                 tagSuggestions.classList.remove('hidden');
                 
                 // Add click listeners
-                tagSuggestions.querySelectorAll('.tag-suggestion').forEach(suggestion => {
+                tagSuggestions.querySelectorAll('.tag-suggestion-item').forEach(suggestion => {
                     suggestion.addEventListener('click', function() {
                         selectTag(this);
                     });

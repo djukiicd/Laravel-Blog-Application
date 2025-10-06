@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
@@ -40,7 +41,35 @@ Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show')
 
 // Dashboard route
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    $user = auth()->user();
+    
+    // Get user's posts with counts
+    $userPosts = $user->posts()
+        ->withCount(['upvotes', 'comments'])
+        ->latest()
+        ->paginate(5);
+    
+    // Get user's comments with post info
+    $userComments = $user->comments()
+        ->with('post')
+        ->latest()
+        ->paginate(5);
+    
+    // Calculate total upvotes received by user's posts
+    $totalUpvotes = $user->posts()
+        ->withCount('upvotes')
+        ->get()
+        ->sum('upvotes_count');
+    
+    // Calculate recent activity (posts + comments in last 7 days)
+    $recentActivity = $user->posts()
+        ->where('created_at', '>=', now()->subDays(7))
+        ->count() + 
+        $user->comments()
+        ->where('created_at', '>=', now()->subDays(7))
+        ->count();
+    
+    return view('dashboard', compact('userPosts', 'userComments', 'totalUpvotes', 'recentActivity'));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // Profile routes
@@ -48,6 +77,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// Admin routes
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::delete('/posts/{post}', [AdminController::class, 'deletePost'])->name('posts.delete');
+    Route::delete('/comments/{comment}', [AdminController::class, 'deleteComment'])->name('comments.delete');
+    Route::patch('/users/{user}/toggle-status', [AdminController::class, 'toggleUserStatus'])->name('users.toggle-status');
 });
 
 require __DIR__.'/auth.php';
